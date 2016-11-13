@@ -58,10 +58,10 @@
 #include <SerialFlash.h>
 
 // sequence with 23 notes
-float tones[23] = {note_c4, note_d4, note_e4, note_f4, note_g4, note_a4, note_b4,
+float tones[24] = {note_c4, note_d4, note_e4, note_f4, note_g4, note_a4, note_b4,
                    note_c5, note_d5, note_e5, note_f5, note_g5, note_a5, note_b5,
                    note_c6, note_d6, note_e6, note_f6, note_g6, note_a6, note_b6,
-                   note_c7, note_d7
+                   note_c7, note_d7, note_e7
                   };
 
 int irqpin = 2;
@@ -70,10 +70,10 @@ int speaker = 3;
 int Cur_tone = 0;
 
 Adafruit_MPR121 cap = Adafruit_MPR121();
+Adafruit_MPR121 cap2 = Adafruit_MPR121();
 
 boolean touchStates[12];
-
-
+boolean touchStates2[12];
 
 // GUItool: begin automatically generated code
 AudioSynthWaveformSineModulated sine_fm2;       //xy=123.28571319580078,385.1428527832031
@@ -111,13 +111,13 @@ void setup() {
 
   AudioMemory(75);
   sine_fm1.amplitude(1);
-//  waveform1.begin(1, 440, WAVEFORM_SQUARE);
-//  mixer2.gain(0, .7);
-//  mixer2.gain(1, .3);
-//  envelope1.attack(1);
-//  envelope1.release(5);
-//  mixer1.gain(0, 1);
-//  mixer1.gain(1, 0);
+  //  waveform1.begin(1, 440, WAVEFORM_SQUARE);
+  mixer2.gain(0, .7);
+  mixer2.gain(1, .3);
+  //  envelope1.attack(1);
+  //  envelope1.release(5);
+  mixer1.gain(0, 1);
+  mixer1.gain(1, 0);
 
 }
 
@@ -129,7 +129,16 @@ void loop() {
          (touchStates[4] == 1) || (touchStates[5] == 1) ||
          (touchStates[6] == 1) || (touchStates[7] == 1) ||
          (touchStates[8] == 1) || (touchStates[9] == 1) ||
-         (touchStates[10] == 1) || (touchStates[11] == 1))
+         (touchStates[10] == 1) || (touchStates[11] == 1)
+
+         ||
+
+         (touchStates2[0] == 1) || (touchStates2[1] == 1) ||
+         (touchStates2[2] == 1) || (touchStates2[3] == 1) ||
+         (touchStates2[4] == 1) || (touchStates2[5] == 1) ||
+         (touchStates2[6] == 1) || (touchStates2[7] == 1) ||
+         (touchStates2[8] == 1) || (touchStates2[9] == 1) ||
+         (touchStates2[10] == 1) || (touchStates2[11] == 1))
   {
 
     Serial.println("we touched");
@@ -182,6 +191,55 @@ void loop() {
       Cur_tone = tones[11];
     }
 
+    if (touchStates2[0] == 1)
+    {
+      Cur_tone = tones[12];
+    }
+    if (touchStates2[1] == 1)
+    {
+      Cur_tone = tones[13];
+    }
+    if (touchStates2[2] == 1)
+    {
+      Cur_tone = tones[14];
+    }
+    if (touchStates2[3] == 1)
+    {
+      Cur_tone = tones[15];
+    }
+    if (touchStates2[4] == 1)
+    {
+      Cur_tone = tones[16];
+    }
+    if (touchStates2[5] == 1)
+    {
+      Cur_tone = tones[17];
+    }
+    if (touchStates2[6] == 1)
+    {
+      Cur_tone = tones[18];
+    }
+    if (touchStates2[7] == 1)
+    {
+      Cur_tone = tones[19];
+    }
+    if (touchStates2[8] == 1)
+    {
+      Cur_tone = tones[20];
+    }
+    if (touchStates2[9] == 1)
+    {
+      Cur_tone = tones[21];
+    }
+    if (touchStates2[10] == 1)
+    {
+      Cur_tone = tones[22];
+    }
+    if (touchStates2[11] == 1)
+    {
+      Cur_tone = tones[23];
+    }
+
     //    freq_out1 = seq23[seq_step1];
     sine_fm1.frequency(Cur_tone);
     envelope1.noteOff();
@@ -190,12 +248,12 @@ void loop() {
     //    envelope1.noteOff();
     //    digitalWrite(speaker, LOW);
     //    delayMicroseconds(Cur_tone);
-//    tone(23, Cur_tone);
+    //    tone(23, Cur_tone);
 
   }
   else //in case no button is pressed , close the piezo
   {
-//    Serial.println("we done?");
+    //    Serial.println("we done?");
     //    envelope1.noteOff();
     //    digitalWrite(speaker, LOW);
   }
@@ -203,6 +261,7 @@ void loop() {
 
 void readTouchInputs() {
 
+  // check 1
   if (!checkInterrupt()) {
     //    Serial.println("hellso world");
     Wire.requestFrom(0x5A, 2);
@@ -233,6 +292,38 @@ void readTouchInputs() {
       }
     }
   }
+
+  // check 2
+  if (!checkInterrupt()) {
+    //    Serial.println("hellso world");
+    Wire.requestFrom(0x5B, 2);
+
+    byte LSB = Wire.read();
+    byte MSB = Wire.read();
+
+    uint16_t touched = ((MSB << 8) | LSB);
+
+    for (int i = 0; i < 12; i++) {
+      if (touched & (1 << i)) {
+
+        if (touchStates2[i] == 0) {
+          Serial.print(i);
+          Serial.println(".Pin Dokulundu");
+
+        } else if (touchStates2[i] == 1) {
+        }
+
+        touchStates2[i] = 1;
+      } else {
+        if (touchStates2[i] == 1) {
+          Serial.print(i);
+          Serial.println(".Pin Cekildi");
+
+        }
+        touchStates2[i] = 0;
+      }
+    }
+  }
 }
 
 void mpr121_setup(void) {
@@ -243,6 +334,13 @@ void mpr121_setup(void) {
     while (1);
   }
   Serial.println("MPR121 found!");
+
+  if (!cap.begin(0x5B)) {
+    delay(5000);
+    Serial.println("MPR121 2 not found, check wiring?");
+    while (1);
+  }
+  Serial.println("MPR121 2 found!");
   //  set_register(0x5A, ELE_CFG, 0x00);
   //
   //  set_register(0x5A, MHD_R, 0x01);
