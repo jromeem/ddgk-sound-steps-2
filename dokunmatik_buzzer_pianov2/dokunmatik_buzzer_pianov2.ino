@@ -49,28 +49,76 @@
 #define TOU_THRESH  0x06
 #define REL_THRESH  0x0A
 
-#include <Wire.h>
 #include "Adafruit_MPR121.h"
+#include "notes.h"
+#include <Wire.h>
+#include <Audio.h>
+#include <SPI.h>
+#include <SD.h>
+#include <SerialFlash.h>
+
+// sequence with 23 notes
+float tones[23] = {note_c4, note_d4, note_e4, note_f4, note_g4, note_a4, note_b4,
+                   note_c5, note_d5, note_e5, note_f5, note_g5, note_a5, note_b5,
+                   note_c6, note_d6, note_e6, note_f6, note_g6, note_a6, note_b6,
+                   note_c7, note_d7
+                  };
 
 int irqpin = 2;
 int speaker = 3;
-int tones[] = {1700, 1519, 1432, 1275, 1136, 1014, 956, 851, 758, 716, 636, 568 };
+//int tones[] = {1700, 1519, 1432, 1275, 1136, 1014, 956, 851, 758, 716, 636, 568 };
 int Cur_tone = 0;
 
 Adafruit_MPR121 cap = Adafruit_MPR121();
 
 boolean touchStates[12];
 
+
+
+// GUItool: begin automatically generated code
+AudioSynthWaveformSineModulated sine_fm2;       //xy=123.28571319580078,385.1428527832031
+AudioSynthWaveform       waveform1;      //xy=218,470
+AudioSynthWaveformSineModulated sine_fm1;       //xy=271.8571472167969,385.4285888671875
+AudioMixer4              mixer2;         //xy=444,454
+AudioEffectEnvelope      envelope1;      //xy=608.4284973144531,453.4285888671875
+//AudioEffectDelay         delay1;         //xy=770,614
+AudioMixer4              mixer1;         //xy=771,471.5714416503906
+AudioAnalyzePeak         peak1;          //xy=921,321
+AudioOutputAnalog        dac1;           //xy=1001.4285659790039,486.8571300506592
+AudioConnection          patchCord1(sine_fm2, sine_fm1);
+AudioConnection          patchCord2(waveform1, 0, mixer2, 1);
+AudioConnection          patchCord3(sine_fm1, 0, mixer2, 0);
+AudioConnection          patchCord4(mixer2, envelope1);
+AudioConnection          patchCord5(envelope1, 0, mixer1, 0);
+//AudioConnection          patchCord6(delay1, 0, mixer1, 1);
+AudioConnection          patchCord6(mixer1, dac1);
+AudioConnection          patchCord7(mixer1, peak1);
+//AudioConnection          patchCord9(mixer1, delay1);
+// GUItool: end automatically generated code
+
+
+
 void setup() {
   pinMode(irqpin, INPUT);
-//  pinMode(speaker, OUTPUT);
-//  digitalWrite(irqpin, HIGH);
+  //  pinMode(speaker, OUTPUT);
+  //  digitalWrite(irqpin, HIGH);
 
-//  Serial.begin(57600);
-//  Serial.begin(9600);
-//  Wire.begin();
+  //  Serial.begin(57600);
+  //  Serial.begin(9600);
+  //  Wire.begin();
 
   mpr121_setup();
+
+  AudioMemory(75);
+  sine_fm1.amplitude(1);
+//  waveform1.begin(1, 440, WAVEFORM_SQUARE);
+//  mixer2.gain(0, .7);
+//  mixer2.gain(1, .3);
+//  envelope1.attack(1);
+//  envelope1.release(5);
+//  mixer1.gain(0, 1);
+//  mixer1.gain(1, 0);
+
 }
 
 void loop() {
@@ -84,7 +132,7 @@ void loop() {
          (touchStates[10] == 1) || (touchStates[11] == 1))
   {
 
-//    Serial.println("we touched");
+    Serial.println("we touched");
     if (touchStates[0] == 1)
     {
       Cur_tone = tones[0];
@@ -134,21 +182,29 @@ void loop() {
       Cur_tone = tones[11];
     }
 
-    digitalWrite(speaker, HIGH);
-    delayMicroseconds(Cur_tone);
-    digitalWrite(speaker, LOW);
-    delayMicroseconds(Cur_tone);
+    //    freq_out1 = seq23[seq_step1];
+    sine_fm1.frequency(Cur_tone);
+    envelope1.noteOff();
+    //    digitalWrite(speaker, HIGH);
+    //    delayMicroseconds(Cur_tone);
+    //    envelope1.noteOff();
+    //    digitalWrite(speaker, LOW);
+    //    delayMicroseconds(Cur_tone);
+//    tone(23, Cur_tone);
+
   }
   else //in case no button is pressed , close the piezo
   {
-    digitalWrite(speaker, LOW);
+//    Serial.println("we done?");
+    //    envelope1.noteOff();
+    //    digitalWrite(speaker, LOW);
   }
 }
 
 void readTouchInputs() {
-  
+
   if (!checkInterrupt()) {
-//    Serial.println("hellso world");
+    //    Serial.println("hellso world");
     Wire.requestFrom(0x5A, 2);
 
     byte LSB = Wire.read();
@@ -182,54 +238,54 @@ void readTouchInputs() {
 void mpr121_setup(void) {
   Serial.println("finding?");
   if (!cap.begin(0x5A)) {
-    delay(500);
+    delay(5000);
     Serial.println("MPR121 not found, check wiring?");
     while (1);
   }
   Serial.println("MPR121 found!");
-//  set_register(0x5A, ELE_CFG, 0x00);
-//
-//  set_register(0x5A, MHD_R, 0x01);
-//  set_register(0x5A, NHD_R, 0x01);
-//  set_register(0x5A, NCL_R, 0x00);
-//  set_register(0x5A, FDL_R, 0x00);
-//
-//  set_register(0x5A, MHD_F, 0x01);
-//  set_register(0x5A, NHD_F, 0x01);
-//  set_register(0x5A, NCL_F, 0xFF);
-//  set_register(0x5A, FDL_F, 0x02);
-//
-//  set_register(0x5A, ELE0_T, TOU_THRESH);
-//  set_register(0x5A, ELE0_R, REL_THRESH);
-//  set_register(0x5A, ELE1_T, TOU_THRESH);
-//  set_register(0x5A, ELE1_R, REL_THRESH);
-//  set_register(0x5A, ELE2_T, TOU_THRESH);
-//  set_register(0x5A, ELE2_R, REL_THRESH);
-//  set_register(0x5A, ELE3_T, TOU_THRESH);
-//  set_register(0x5A, ELE3_R, REL_THRESH);
-//  set_register(0x5A, ELE4_T, TOU_THRESH);
-//  set_register(0x5A, ELE4_R, REL_THRESH);
-//  set_register(0x5A, ELE5_T, TOU_THRESH);
-//  set_register(0x5A, ELE5_R, REL_THRESH);
-//  set_register(0x5A, ELE6_T, TOU_THRESH);
-//  set_register(0x5A, ELE6_R, REL_THRESH);
-//  set_register(0x5A, ELE7_T, TOU_THRESH);
-//  set_register(0x5A, ELE7_R, REL_THRESH);
-//  set_register(0x5A, ELE8_T, TOU_THRESH);
-//  set_register(0x5A, ELE8_R, REL_THRESH);
-//  set_register(0x5A, ELE9_T, TOU_THRESH);
-//  set_register(0x5A, ELE9_R, REL_THRESH);
-//  set_register(0x5A, ELE10_T, TOU_THRESH);
-//  set_register(0x5A, ELE10_R, REL_THRESH);
-//  set_register(0x5A, ELE11_T, TOU_THRESH);
-//  set_register(0x5A, ELE11_R, REL_THRESH);
-//  set_register(0x5A, FIL_CFG, 0x04);
-//  set_register(0x5A, ELE_CFG, 0x0C);
-//  set_register(0x5A, ELE_CFG, 0x0C);
+  //  set_register(0x5A, ELE_CFG, 0x00);
+  //
+  //  set_register(0x5A, MHD_R, 0x01);
+  //  set_register(0x5A, NHD_R, 0x01);
+  //  set_register(0x5A, NCL_R, 0x00);
+  //  set_register(0x5A, FDL_R, 0x00);
+  //
+  //  set_register(0x5A, MHD_F, 0x01);
+  //  set_register(0x5A, NHD_F, 0x01);
+  //  set_register(0x5A, NCL_F, 0xFF);
+  //  set_register(0x5A, FDL_F, 0x02);
+  //
+  //  set_register(0x5A, ELE0_T, TOU_THRESH);
+  //  set_register(0x5A, ELE0_R, REL_THRESH);
+  //  set_register(0x5A, ELE1_T, TOU_THRESH);
+  //  set_register(0x5A, ELE1_R, REL_THRESH);
+  //  set_register(0x5A, ELE2_T, TOU_THRESH);
+  //  set_register(0x5A, ELE2_R, REL_THRESH);
+  //  set_register(0x5A, ELE3_T, TOU_THRESH);
+  //  set_register(0x5A, ELE3_R, REL_THRESH);
+  //  set_register(0x5A, ELE4_T, TOU_THRESH);
+  //  set_register(0x5A, ELE4_R, REL_THRESH);
+  //  set_register(0x5A, ELE5_T, TOU_THRESH);
+  //  set_register(0x5A, ELE5_R, REL_THRESH);
+  //  set_register(0x5A, ELE6_T, TOU_THRESH);
+  //  set_register(0x5A, ELE6_R, REL_THRESH);
+  //  set_register(0x5A, ELE7_T, TOU_THRESH);
+  //  set_register(0x5A, ELE7_R, REL_THRESH);
+  //  set_register(0x5A, ELE8_T, TOU_THRESH);
+  //  set_register(0x5A, ELE8_R, REL_THRESH);
+  //  set_register(0x5A, ELE9_T, TOU_THRESH);
+  //  set_register(0x5A, ELE9_R, REL_THRESH);
+  //  set_register(0x5A, ELE10_T, TOU_THRESH);
+  //  set_register(0x5A, ELE10_R, REL_THRESH);
+  //  set_register(0x5A, ELE11_T, TOU_THRESH);
+  //  set_register(0x5A, ELE11_R, REL_THRESH);
+  //  set_register(0x5A, FIL_CFG, 0x04);
+  //  set_register(0x5A, ELE_CFG, 0x0C);
+  //  set_register(0x5A, ELE_CFG, 0x0C);
 }
 
 boolean checkInterrupt(void) {
-//  Serial.println("what is this");
+  //  Serial.println("what is this");
   return digitalRead(irqpin);
 }
 
